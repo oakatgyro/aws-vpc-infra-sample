@@ -12,6 +12,8 @@ I want to communicate my work through Github. This time the first installment of
 
 This is an example how to build vpc and so on.
 
+![diagram](/diagram/diagram.png)
+
 ### Prerequisites
 
 * jq([Link](https://stedolan.github.io/jq/download/))
