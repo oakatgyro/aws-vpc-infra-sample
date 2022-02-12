@@ -1,0 +1,384 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: VPC and make some resources for VPC
+
+Metadata:
+  "AWS::CloudFormation::Interface":
+    ParameterGroups:
+      - Label:
+          default: "About Project / Application Name"
+        Parameters:
+          - EnvironmentName
+          - ApplicationName
+      - Label:
+          default: "Network Configuration"
+        Parameters:
+          - VPCCidrBlock
+          - PublicSubnet1ACidrBlock
+          - PublicSubnet1CCidrBlock
+          - PrivateSubnet1ACidrBlock
+          - PrivateSubnet1CCidrBlock
+          - AvailabilityZone1A
+          - AvailabilityZone1C
+    ParameterLabels:
+      EnvironmentName:
+        default: "Environment name"
+      ApplicationName:
+        default: "Application name"
+      VPCCidrBlock:
+        default: "VPC CIDR Block"
+      PublicSubnet1ACidrBlock:
+        default: "PublicSubnet1A CIDR Block"
+      PublicSubnet1CCidrBlock:
+        default: "PublicSubnetC CIDR Block"
+      PrivateSubnet1ACidrBlock:
+        default: "PrivateSubnetA CIDR Block"
+      PrivateSubnet1CCidrBlock:
+        default: "PrivateSubnetC CIDR Block"
+      AvailabilityZone1A:
+        default: "Availability Zone 1A Name"
+      AvailabilityZone1C:
+        default: "Availability Zone 1C Name"
+
+Parameters:
+  EnvironmentName:
+    Type: String
+    AllowedValues:
+      - dev
+      - stg
+      - prd
+  ApplicationName:
+    Type: String
+
+  VPCCidrBlock:
+    Type: String
+
+  PublicSubnet1ACidrBlock:
+    Type: String
+
+  PublicSubnet1CCidrBlock:
+    Type: String
+
+  PrivateSubnet1ACidrBlock:
+    Type: String
+
+  PrivateSubnet1CCidrBlock:
+    Type: String
+
+  AvailabilityZone1A:
+    Type: AWS::EC2::AvailabilityZone::Name
+
+  AvailabilityZone1C:
+    Type: AWS::EC2::AvailabilityZone::Name
+
+Resources:
+  # VPC
+  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-vpc.html
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidrBlock
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      InstanceTenancy: default
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-vpc"
+
+  # InternetGateway
+  # https://docs.aws.amazon.com/ja_jp/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-internetgateway.html
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-igw"
+
+  # IGW Attach
+  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-vpc-gateway-attachment.html
+  InternetGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGateway
+      VpcId: !Ref VPC
+
+  # Subnet
+  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-subnet.html
+
+  # Public Subnet1A
+  PublicSubnet1A:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Ref AvailabilityZone1A
+      CidrBlock: !Ref PublicSubnet1ACidrBlock
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-PublicSubnet1A"
+
+  # Public Subnet1C
+  PublicSubnet1C:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Ref AvailabilityZone1C
+      CidrBlock: !Ref PublicSubnet1CCidrBlock
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-PublicSubnet1C"
+
+  # Private Subnet1A
+  PrivateSubnet1A:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Ref AvailabilityZone1A
+      CidrBlock: !Ref PrivateSubnet1ACidrBlock
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-PrivateSubnet1A"
+
+  # Private Subnet1C
+  PrivateSubnet1C:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Ref AvailabilityZone1C
+      CidrBlock: !Ref PrivateSubnet1CCidrBlock
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-PrivateSubnet1A"
+
+  # RouteTable
+  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-routeTable.html
+
+  # Public RouteTable1A
+  PublicRouteTable1A:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-PublicRouteTable1A"
+
+  # Public RouteTableC
+  PublicRouteTable1C:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-PublicRouteTable1C"
+
+  # Private RouteTable1A
+  PrivateRouteTable1A:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-PrivateRouteTable1A
+
+  # Private RouteTable1C
+  PrivateRouteTable1C:
+    Type: "AWS::EC2::RouteTable"
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${EnvironmentName}-PrivateRouteTable1C"
+
+  # Route
+  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-route.html
+
+  # PublicRoute1A
+  PublicRouteA:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable1A
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  # PublicRoute1C
+  PublicRouteC:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable1C
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+
+  # SubnetRouteTableAssociation
+  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-subnetRouteTableAssociation.html
+
+  # PublicRouteTable Association Subnet1A
+  PublicSubnet1ARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1A
+      RouteTableId: !Ref PublicRouteTable1A
+
+  # PublicRouteTable Association Subnet1C
+  PublicSubnetCRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1C
+      RouteTableId: !Ref PublicRouteTable1C
+
+  # PrivateRouteTable Association Subnet1A
+  PrivateSubnetARouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1A
+      RouteTableId: !Ref PrivateRouteTable1A
+
+  # PrivateRouteTable Associate Subnet1C
+  PrivateSubnetCRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1C
+      RouteTableId: !Ref PrivateRouteTable1C
+
+  # SecurityGroup
+  # https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-securityGroup.html
+
+  SecurityGroupHTTP:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: SecurityGroup for HTTP
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-HTTP
+  
+  SecurityGroupSSH:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !Ref VPC
+      GroupDescription: SecurityGroup for SSH
+      SecurityGroupIngress:
+        - CidrIp: 0.0.0.0/0
+          IpProtocol: tcp
+          FromPort: 22
+          ToPort: 22
+      Tags:
+        - Key: Name
+          Value: !Sub ${EnvironmentName}-SSH
+
+Outputs:
+  VPC:
+    Description: VPC ID
+    Value: !Ref VPC
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-VpcID"
+
+  VPCCidrBlock:
+    Description: VPC Cidr Block
+    Value: !Ref VPCCidrBlock
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-VPCCidrBlock"
+
+  PublicSubnet1A:
+    Description: Public Subnet 1A ID
+    Value: !Ref PublicSubnet1A
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-PublicSubnet1AID"
+
+  PublicSubnet1ACidrBlock:
+    Description: Public Subnet 1A Cidr Block
+    Value: !Ref PublicSubnet1ACidrBlock
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-PublicSubnet1ACidrBlock"
+
+  PublicSubnet1C:
+    Description: Public Subnet 1C ID
+    Value: !Ref PublicSubnet1C
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-PublicSubnet1CID"
+
+  PublicSubnet1CCidrBlock:
+    Description: Public Subnet 1C Cidr Block
+    Value: !Ref PublicSubnet1CCidrBlock
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-PublicSubnet1CCidrBlock"
+
+  PublicSubnetIDs:
+    Description: Public Subnet IDs
+    Value: !Join
+      - ","
+      - - !Ref PublicSubnet1A
+        - !Ref PublicSubnet1C
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-PublicSubnetIDs"
+
+  PrivateSubnet1ACidrBlock:
+    Description: Private Subnet 1A Cidr Block
+    Value: !Ref PrivateSubnet1ACidrBlock
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-PrivateSubnet1ACidrBlock"
+
+  PrivateSubnetCID:
+    Description: Private Subnet 1C Cidr Block
+    Value: !Ref PrivateSubnet1C
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-PrivateSubnet1CID"
+
+  PrivateSubnetCCidrBlock:
+    Description: Private Subnet 1C Cidr Block
+    Value: !Ref PrivateSubnet1CCidrBlock
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-PrivateSubnet1CCidrBlock"
+
+  PrivateSubnetIDs:
+    Description: Private Subnet IDs
+    Value: !Join
+      - ","
+      - - !Ref PrivateSubnet1A
+        - !Ref PrivateSubnet1C
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-PrivateSubnetIDs"
+
+  PublicRouteTable1A:
+    Description: Public Subnet 1A RouteTable
+    Value: !Ref PublicRouteTable1A
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-PublicRouteTable1A"
+
+  PublicRouteTable1C:
+    Description: Public Subnet 1C RouteTable
+    Value: !Ref PublicRouteTable1C
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-PublicRouteTable1C"
+
+  PrivateRouteTable1A:
+    Description: Private Subnet 1A RouteTable
+    Value: !Ref PrivateRouteTable1A
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-PrivateRouteTable1A"
+
+  PrivateRouteTable1C:
+    Description: Private Subnet 1C RouteTable
+    Value: !Ref PrivateRouteTable1C
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-PrivateRouteTable1C"
+
+  SecurityGroupHTTP:
+    Description: Security Group for HTTP/HTTPS
+    Value: !Ref SecurityGroupHTTP
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-SecurityGroupHTTP"
+
+  SecurityGroupSSH:
+    Description: Security Group for SSH
+    Value: !Ref SecurityGroupSSH
+    Export:
+      Name: !Sub "${EnvironmentName}-${ApplicationName}-SecurityGroupSSH"
+
+  

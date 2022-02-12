@@ -1,0 +1,17 @@
+{
+    "Parameters": {
+        "EnvironmentName": "stg",
+        "ApplicationName": "vpc-infra",
+        "VPCCidrBlock": "10.1.0.0/16",
+        "PublicSubnet1ACidrBlock": "10.1.10.0/24",
+        "PublicSubnet1CCidrBlock": "10.1.20.0/24",
+        "PrivateSubnet1ACidrBlock": "10.1.100.0/24",
+        "PrivateSubnet1CCidrBlock": "10.1.200.0/24",
+        "AvailabilityZone1A": "eu-west-1a",
+        "AvailabilityZone1C": "eu-west-1c"
+    },
+    "Tags": {
+        "Owner": "oakatgyro",
+        "Project": "vpc-infra-sample"
+    }
+}
